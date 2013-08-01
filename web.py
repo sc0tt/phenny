@@ -15,6 +15,7 @@ from html.entities import name2codepoint
 from urllib.parse import quote, unquote
 
 user_agent = "Mozilla/5.0 (Phenny)"
+user_agent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/28.0.1468.0 Safari/537.36"
 default_headers = {'User-Agent': user_agent}
 
 def get(uri, headers={}, verify=True, **kwargs): 

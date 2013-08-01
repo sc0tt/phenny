@@ -7,7 +7,7 @@ def bitcoin(phenny, input):
    uri = "https://coinbase.com/api/v1/prices/spot_rate"
    bytesData = urllib.request.urlopen(uri)
    data = json.loads(bytesData.read().decode('utf-8'))
-   output = 'Current Price: ฿%s' % (data["amount"])
+   output = 'Current Price of ฿1: $%s' % (data["amount"])
    phenny.say(output)
 
 bitcoin.commands = ['btc']

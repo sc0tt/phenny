@@ -41,7 +41,7 @@ def urbandict(phenny, input):
     url = 'http://www.urbandictionary.com/define.php?term={0}'.format(
         web.quote(word))
 
-    response = "{0} - {1}".format(result['definition'].strip()[:256], url)
+    response = "{0}: {1} - {2}".format(word, result['definition'].strip()[:256], url)
     phenny.say(response)
 urbandict.rule = (['urb'], r'(.*)')
 

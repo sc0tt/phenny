@@ -7,7 +7,7 @@ def m(phenny, input):
          phenny.say(images[key])
       else:
          if len(word) > 1:
-            word = word[1:]
+            word = " ".join(word[1:])
             images[key] = word
             phenny.say(key + " = " + word)
          else:

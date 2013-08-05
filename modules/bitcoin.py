@@ -3,11 +3,20 @@ import web
 import json
 import decimal
 
+lastPrice = 0
+
 def bitcoin(phenny, input):
+   global lastPrice
    uri = "https://coinbase.com/api/v1/prices/spot_rate"
    bytesData = urllib.request.urlopen(uri)
    data = json.loads(bytesData.read().decode('utf-8'))
-   output = 'Current Price of ฿1: $%s' % (data["amount"])
+   diff = decimal.Decimal(data["amount"]) - lastPrice
+   diffStr = ""
+   if diff != decimal.Decimal(0):
+      sign = "+" if diff > 0 else ''
+      diffStr = " (%s%s)" % (sign, diff)
+   output = 'Current Price of ฿1: $%s%s' % (data["amount"], diffStr)
+   lastPrice = decimal.Decimal(data["amount"])
    phenny.say(output)
 
 bitcoin.commands = ['btc']

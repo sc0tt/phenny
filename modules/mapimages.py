@@ -15,3 +15,14 @@ def m(phenny, input):
 
 m.commands = ['m']
 m.priority = 'low'
+
+def catchAll(phenny, input):
+   word = input.group(0)
+   word = word.lstrip('.')
+   word = word.split()[0]
+   if word in images:
+      phenny.say(images[word])
+
+#catchAll.rule = r'\..+'
+#catchAll.priority = 'low'
+

@@ -38,3 +38,8 @@ def ohyou(phenny, input):
 
 ohyou.commands = ['ohyou']
 ohyou.priority = 'low'
+
+def lod(phenny, input):
+   phenny.say("ಠ_ಠ")
+lod.commands = ['lod']
+lod.priority = 'low'

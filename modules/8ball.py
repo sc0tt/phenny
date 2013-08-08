@@ -16,6 +16,9 @@ def eightball(phenny, input):
             'Without a doubt',
             'Yes--definitely',
             'You may rely on it',
+            'HELL FUCKING YES',
+            'Fuck you, yes.',
+            'ABSOFUCKINGLUTELY',
     ]
     tentative_yes = [
             'As I see it, yes',
@@ -23,6 +26,7 @@ def eightball(phenny, input):
             'Outlook good',
             'Signs point to yes',
             'Yes',
+            'I guess...',
     ]
     negative = [
             'Your request is not bro enough',
@@ -38,7 +42,9 @@ def eightball(phenny, input):
             'My reply is no',
             'My sources say no',
             'Outlook not so good',
-            'Very doubtful'
+            'Very doubtful',
+            'Too many natties to reply',
+            'Sorry. Out playing lax',
     ]
 
     # black magic

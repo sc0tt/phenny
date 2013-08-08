@@ -11,7 +11,8 @@ def antijoke(phenny, input):
 	exp = re.compile('<p>(.*?)<\/p>')
 	joke = exp.findall(desc)
 	phenny.say(title)
-	phenny.say(joke[0])
+	if len(joke) >= 1:
+		phenny.say(joke[0])
 
 antijoke.commands = ['antijoke']
 antijoke.priority = 'low'	

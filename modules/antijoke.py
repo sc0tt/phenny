@@ -24,11 +24,15 @@ def pun(phenny,input):
    all_puns = []
    for item in range(feedlen):
       desc = exp.findall(feed["items"][item]["description"])
-      if len(desc) >= 1:
+      desclen = len(desc)
+      if desclen >= 1:
          title = feed["items"][item]["title"] 
-         txt = desc[0]
+         txt = ""
+         for ptag in range(desclen):
+            txt = txt + " " + desc[ptag]
+         
          all_puns.append([title, txt])
-
+            		
    pun_choice = choice(all_puns)
    phenny.say(pun_choice[0])
    phenny.say(pun_choice[1])

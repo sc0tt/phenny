@@ -6,6 +6,7 @@ import html.parser
 
 punCount = 0
 exp = re.compile('<p>(.*?)<\/p>')
+hrefExp = re.compile('<a href="(.*?)">[link]')
 htmlParser = html.parser.HTMLParser()
 
 def antijoke(phenny, input):
@@ -41,3 +42,13 @@ def pun(phenny,input):
 
 pun.commands = ['pun']
 pun.priority = 'low'
+
+def subr(phenny,input):
+   subreddit = input.group(2)
+   feed = feedparser.parse('http://www.reddit.com/r/'+subreddit+'/.rss?limit=100')
+   rNum = randint(0,len(feed["items"]))
+   link = feed["items"][rNum]["link"]
+   phenny.say(link)
+
+subr.commands = ['subr']
+subr.priority = 'low'

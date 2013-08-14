@@ -2,24 +2,26 @@
 import feedparser
 import re
 from random import randint, choice
+import html.parser
 
 punCount = 0
 exp = re.compile('<p>(.*?)<\/p>')
+htmlParser = html.parser.HTMLParser()
 
 def antijoke(phenny, input):
    feed = feedparser.parse('http://www.reddit.com/r/antijokes/.rss?limit=50')
    rNum = randint(0,len(feed["items"]))
    title = feed["items"][rNum]["title"]
    desc = exp.findall(feed["items"][rNum]["description"])
-   phenny.say(title)
+   phenny.say(htmlParser.unescape(title))
    if len(desc) >= 1:
-      phenny.say(desc[0])
+      phenny.say(htmlParser.unescape(desc[0]))
 
 antijoke.commands = ['antijoke']
 antijoke.priority = 'low'	
 
 def pun(phenny,input):
-   feed = feedparser.parse('http://www.reddit.com/r/punny/.rss?limit=50')
+   feed = feedparser.parse('http://www.reddit.com/r/punny/.rss?limit=100')
    feedlen = len(feed["items"])
    all_puns = []
    for item in range(feedlen):
@@ -34,8 +36,8 @@ def pun(phenny,input):
          all_puns.append([title, txt])
             		
    pun_choice = choice(all_puns)
-   phenny.say(pun_choice[0])
-   phenny.say(pun_choice[1])
+   phenny.say(htmlParser.unescape(pun_choice[0]))
+   phenny.say(htmlParser.unescape(pun_choice[1]))
 
 pun.commands = ['pun']
 pun.priority = 'low'

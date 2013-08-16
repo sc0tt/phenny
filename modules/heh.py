@@ -58,3 +58,27 @@ def leet(phenny, input):
 
 leet.commands = ['leet']
 leet.priority = 'low'
+
+def srsly(phenny, input):
+   phenny.say("http://i.imgur.com/4Zf2bzo.png")
+
+srsly.commands = ['srsly']
+srsly.priority = 'low'
+
+def interesting(phenny, input):
+   phenny.say("http://i.imgur.com/RAEek5T.jpg")
+
+interesting.commands = ['interesting']
+interesting.priority = 'low'
+
+def brotato(phenny, input):
+   phenny.say("http://i.imgur.com/1J2sRdk.jpg")
+
+brotato.commands = ['brotato']
+brotato.priority = 'low'
+
+def party(phenny, input):
+   phenny.say("http://i.imgur.com/34t9KcA.jpg")
+
+party.commands = ['party']
+party.priority = 'low'

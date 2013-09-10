@@ -8,7 +8,7 @@ import json
 import psycopg2
 
 with open("wafflebot.txt") as fp:
-db_user, db_pass = fp.read().split()
+   db_user, db_pass = fp.read().split()
 
 db = psycopg2.connect("dbname=wafflebot user=%s password=%s" % (db_user, db_pass))
 cursor = db.cursor()

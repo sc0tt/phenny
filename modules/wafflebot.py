@@ -14,7 +14,8 @@ db = psycopg2.connect("dbname=wafflebot user=%s password=%s" % (db_user, db_pass
 cursor = db.cursor()
 
 def wafflebot(phenny, input):
-   for pair in rip_sentence(input):
+   print(input.group(0))
+   for pair in rip_sentence(input.group(0)):
       key = pair[0].replace("'","\'")
       val = pair[1].replace("'","\'")
       cursor.execute("INSERT INTO pairs (key, val) VALUES (%s, %s)", (key, val))

@@ -1,10 +1,13 @@
 import ttapi
 import threading
+import time
 
 class TTBot(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.bot = None
+        self.djCount = 0
+        self.takingDJ = False
         self.currentSong = "Nothing is currently playing. This will be updated when the next song starts."
 
     def run(self):
@@ -15,12 +18,15 @@ class TTBot(threading.Thread):
         self.bot.start()
         self.currentSong = None
 
+
     def updateSong(self, data):
         self.bot.bop()
         artist = data['room']['metadata']["current_song"]['metadata']["artist"]
         song = data['room']['metadata']["current_song"]['metadata']["song"]
         dj = data['room']['metadata']["current_song"]["djname"]
         self.currentSong = "%s is currently DJing: %s by %s" % (dj, song, artist)
+
+
 
 myBot = TTBot()
 myBot.start()

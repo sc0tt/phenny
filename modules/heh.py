@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from random import choice
+import requests
 
 alotImages = ["http://i.imgur.com/7GJ5XoB.png",
               "http://i.imgur.com/xncEQ8B.png",
@@ -82,3 +83,11 @@ def party(phenny, input):
 
 party.commands = ['party']
 party.priority = 'low'
+
+def zen(phenny, input):
+   uri = "https://api.github.com/zen"
+   bytesData = requests.get(uri)
+   phenny.say(bytesData.text)
+
+zen.commands = ['zen']
+zen.priority = 'low'

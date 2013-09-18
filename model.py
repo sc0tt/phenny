@@ -19,6 +19,7 @@ class Fight(BaseModel):
    attack = IntegerField()
    defender = ForeignKeyField(Player, related_name='defends')
    defense = IntegerField()
+   critical = BooleanField()
    fight_time = DateTimeField()
 
 class ItemType(BaseModel):

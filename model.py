@@ -1,6 +1,6 @@
 from peewee import *
 
-db = SqliteDatabase('idlerpg.db')
+db = SqliteDatabase('idlerpg.db', threadlocals=True)
 
 class BaseModel(Model):
    class Meta:
@@ -12,7 +12,6 @@ class Player(BaseModel):
    level = IntegerField()
    seconds_to_level = BigIntegerField()
    logged_in = BooleanField()
-   channel = CharField()
 
 class Fight(BaseModel):
    id = PrimaryKeyField()

@@ -1,3 +1,4 @@
+#!/usr/local/bin/python3.3
 from peewee import *
 
 db = SqliteDatabase('idlerpg.db', threadlocals=True)
@@ -10,6 +11,7 @@ class Player(BaseModel):
    id = PrimaryKeyField()
    name = CharField()
    level = IntegerField()
+   countdown_start = DateTimeField()
    seconds_to_level = BigIntegerField()
    logged_in = BooleanField()
 
@@ -21,6 +23,13 @@ class Fight(BaseModel):
    defense = IntegerField()
    critical = BooleanField()
    fight_time = DateTimeField()
+
+class Penalty(BaseModel):
+   id = PrimaryKeyField()
+   player_id = ForeignKeyField(Player, related_name='penalties')
+   seconds = IntegerField()
+   reason = CharField()
+   date = DateTimeField()
 
 class ItemType(BaseModel):
    id = PrimaryKeyField()
@@ -47,3 +56,11 @@ class Inventory(BaseModel):
    origin = ForeignKeyField(ItemOrigin)
    item_type = ForeignKeyField(ItemType)
    item_adj = ForeignKeyField(Descriptor)
+
+class Event(BaseModel):
+   id = PrimaryKeyField()
+   player_id = ForeignKeyField(Player, related_name='events')
+   type = CharField()
+   text = CharField()
+   date = DateTimeField()
+

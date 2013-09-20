@@ -4,6 +4,7 @@ from threading import Timer
 import time
 import random
 import math
+import datetime
 
 currentPlayers = {}
 
@@ -16,12 +17,13 @@ def onJoin(phenny, input):
    elif input.nick not in currentPlayers:
       try:
          player = Player.get(Player.name == input.nick)
+         player.logged_in = True
       except:
-         player = Player.create(name=input.nick, level=1, seconds_to_level=getSecondsForLevel(1), logged_in=1)
+         print("Player %s does not exist..." % (input.nick))
+         player = Player.create(name=input.nick, level=1, seconds_to_level=getSecondsForLevel(1), logged_in=1, countdown_start=datetime.datetime.now())
 
-      player.timer_start = int(time.time())
-      player.timer = Timer(player.seconds_to_level, lambda: levelUser(player))
-      player.save()
+      player.countdown_start = datetime.datetime.now()
+      updateTime(player, penalty=0)
       player.timer.start()
       currentPlayers[input.nick] = player
 
@@ -30,8 +32,10 @@ def onLeave(phenny, input):
       pass
    elif input.nick in currentPlayers:
       currentPlayers[input.nick].logged_in = 0
-      currentPlayers[input.nick].save()
-      updateTime(currentPlayers[input.nick], penalty=50.0*(math.pow(1.14, currentPlayers[input.nick].level)))
+      penalty_time = 50.0*(math.pow(1.14, currentPlayers[input.nick].level))
+      Penalty.create(player_id=currentPlayers[input.nick].id, seconds=penalty_time, reason='Leave', date=datetime.datetime.now())
+
+      updateTime(currentPlayers[input.nick], penalty=penalty_time)
       #Do other mumbo jumbo to calculate penalty
       del currentPlayers[input.nick]
 
@@ -42,7 +46,10 @@ def onNick(phenny, input):
    oldNick = input.nick
    newNick = input.bytes
 
-   updateTime(currentPlayers[oldNick], penalty=30.0*(math.pow(1.14, currentPlayers[oldNick].level)))
+   penalty_time = 30.0*(math.pow(1.14, currentPlayers[oldNick].level))
+   Penalty.create(player_id=currentPlayers[input.nick].id, seconds=penalty_time, reason='Nick', date=datetime.datetime.now())
+
+   updateTime(currentPlayers[oldNick], penalty=penalty_time)
    currentPlayers[oldNick].timer.start()
    currentPlayers[newNick] = currentPlayers[oldNick]
    del currentPlayers[oldNick]
@@ -54,56 +61,93 @@ def updateUsers(phenny, input):
       onJoin(phenny, input)
 
 def levelUser(player):
-   print(player.name + " leveled")
    player.level += 1
+
+   eventText = "%s leveled up to %s" % (player.name, player.level)
+   Event.create(player_id=player.id, type="Level", text=eventText, date=datetime.datetime.now())
+   print(eventText)
+
    updateTime(player)
    player.timer.start()
-   if player.level >= 25 or random.random() < .25:
+
+   if player.level >= 25 or random.random() < .3:
+      print (player.name + " looks like he is gonna fight!")
       opponent = getRandomPlayer(ignore=player.name)
       if opponent is not None:
          initFight(player, opponent)
 
    #Find a new item!
    itemType = ItemType.select().where(ItemType.req_level <= player.level).order_by(fn.Random()).limit(1).get()
-   itemOrigin = ItemOrigin.select().where(ItemOrigin.req_level <= player.level, ItemOrigin.fightable == False).order_by(fn.Random()).limit(1).get()
+   itemOrigin = ItemOrigin.select().where((ItemOrigin.req_level <= player.level) & (ItemOrigin.fightable == False)).order_by(fn.Random()).limit(1).get()
    itemDesc = Descriptor.select().where(Descriptor.req_level <= player.level).order_by(fn.Random()).limit(1).get()
+   itemStat = itemType.stat + itemOrigin.stat + itemDesc.stat
 
    currentItem = getItemOfUser(player, itemType.name)
    if currentItem is None:
       currentItem = Inventory.create(player_id=player.id, origin=itemOrigin.id, item_type=itemType.id, item_adj=itemDesc.id)
-      print("%s found a %s %s of %s" % (player.name, itemOrigin.name, itemType.name, itemDesc.name))
+      eventText = "%s found a %s %s of %s" % (player.name, itemOrigin.name, itemType.name, itemDesc.name)
+      Event.create(player_id=player.id, type="Item", text=eventText, date=datetime.datetime.now())
+      print(eventText)
 
-   elif getStatOfItem(currentItem) <= (itemType.stat + itemOrigin.stat + itemDesc.stat):
-      print("%s threw away his %s %s of %s and got a %s %s of %s" % (player.name, currentItem.origin.name, currentItem.item_type.name, currentItem.item_adj.name, itemOrigin.name, itemType.name, itemDesc.name))
+   elif getStatOfItem(currentItem) <= itemStat:
+
+      eventText = "%s threw away his %s %s of %s [%s] and picked up a %s %s of %s [%s]" % (player.name,
+                                                                                          currentItem.origin.name,
+                                                                                          currentItem.item_type.name,
+                                                                                          currentItem.item_adj.name,
+                                                                                          getStatOfItem(currentItem),
+                                                                                          itemOrigin.name,
+                                                                                          itemType.name,
+                                                                                          itemDesc.name,
+                                                                                          itemStat)
+      Event.create(player_id=player.id, type="Item", text=eventText, date=datetime.datetime.now())
+      print(eventText)
+
       currentItem.origin = ItemOrigin.id
       currentItem.item_type = itemType.id
       currentItem.item_adj = itemDesc.id
       currentItem.save()
+   else:
+      eventText = "%s found a %s %s of %s [%s] but their %s %s of %s [%s] was better!" % (player.name,
+                                                                                          itemOrigin.name,
+                                                                                          itemType.name,
+                                                                                          itemDesc.name,
+                                                                                          itemStat,
+                                                                                          currentItem.origin.name,
+                                                                                          currentItem.item_type.name,
+                                                                                          currentItem.item_adj.name,
+                                                                                          getStatOfItem(currentItem))
+      Event.create(player_id=player.id, type="Item", text=eventText, date=datetime.datetime.now())
+      print(eventText)
 
    #Tweet/update log with leveling information
 
 def updateTime(player, penalty=None):
-   player.timer.cancel()
+   #This exception will be thrown if this is a new user!
+   try:
+      player.timer.cancel()
+   except AttributeError:
+      pass
+
+
    if penalty is not None:
       remaining_time = getSecondsUntilNextLevel(player) + penalty
    else:
       remaining_time = getSecondsForLevel(player.level)
 
+   player.countdown_start = datetime.datetime.now()
    player.seconds_to_level = remaining_time
-   player.timer_start = int(time.time())
-   player.timer = Timer(player.seconds_to_level, lambda: levelUser(player))
    player.save()
+   player.timer = Timer(player.seconds_to_level, lambda: levelUser(player))
+
 
 def getSecondsForLevel(level):
    return int( 600 * math.pow( 1.16, level ) )
 
 def getSecondsUntilNextLevel(player):
-   current_time = int(time.time())
-   elapsed_time = current_time - player.timer_start
-   return player.seconds_to_level - elapsed_time
-
-def getList(phenny, input):
-   phenny.msg(input.nick, str(currentPlayers))
+   current_time = datetime.datetime.now()
+   elapsed_time = current_time - player.countdown_start
+   return player.seconds_to_level - elapsed_time.seconds
 
 def getItemOfUser(player, itemType):
    retVal = None
@@ -129,8 +173,10 @@ def initFight(attacker, defender):
    defense = random.randrange(0, getStats(defender)+1)
    critical = False
    if attack >= defense:
-      timeLost = ( max(defender.level/4.0, 7) / 100.0 ) * getSecondsUntilNextLevel(attacker)
-      updateTime(attacker, penalty=-timeLost)
+      penalty_time = ( max(defender.level/4.0, 7) / 100.0 ) * getSecondsUntilNextLevel(attacker)
+      Penalty.create(player_id=attacker.id, seconds=-penalty_time, reason='Battle Won', date=datetime.datetime.now())
+
+      updateTime(attacker, penalty=-penalty_time)
       attacker.timer.start()
       print(attacker.name + " beat " + defender.name)
 
@@ -138,10 +184,21 @@ def initFight(attacker, defender):
       if random.random() < .03:
          print("It was a critical hit")
          critical = True
-         timeAdded = (random.randrange(5, 25+1) / 100.0) * getSecondsUntilNextLevel(defender)
-         updateTime(defender, timeAdded)
+         penalty_time = (random.randrange(5, 25+1) / 100.0) * getSecondsUntilNextLevel(defender)
+         Penalty.create(player_id=defender.id, seconds=penalty_time, reason='Critical', date=datetime.datetime.now())
+
+         updateTime(defender, penalty=penalty_time)
          defender.timer.start()
-   Fight.create(attacker=attacker.id, attack=attack, defender=defender.id, defense=defense, critical=critical, fight_time=time.time())
+   else:
+      print(attacker.name + " lost to " + defender.name)
+      penalty_time = ( max(defender.level/7.0, 7) / 100.0 ) * getSecondsUntilNextLevel(attacker)
+      Penalty.create(player_id=attacker.id, seconds=penalty_time, reason='Battle Lost', date=datetime.datetime.now())
+
+      updateTime(attacker, penalty=penalty_time)
+      attacker.timer.start()
+
+
+   Fight.create(attacker=attacker.id, attack=attack, defender=defender.id, defense=defense, critical=critical, fight_time=datetime.datetime.now())
    #Tweet/update log with fight information
 
 def getStats(player):
@@ -160,12 +217,17 @@ def getStatOfItem(item):
 def saveAndStop(phenny, input):
    global currentPlayers
    if not input.admin: return
+
+   phenny.say("IdleRPG2 Stopped: Disabling all timers and updating all players information")
    for player in currentPlayers.values():
+      player.logged_in = False
       updateTime(player, penalty=0)
    currentPlayers = {}
 
 def forceUpdate(phenny, input):
    if not input.admin: return
+
+   phenny.say("IdleRPG2 Start: Resuming all active players progress.")
    phenny.write(("WHO", input.sender))
 
 saveAndStop.commands = ['irpg-stop']
@@ -176,10 +238,10 @@ def cheat(phenny, input):
    levelUser(currentPlayers[input.nick])
 cheat.commands = ['cheat']
 
-#forceUpdate.commands = ["forceupdate"]
 
-
-#getList.commands = ['listusers']
+def getList(phenny, input):
+   phenny.msg(input.nick, str(currentPlayers))
+getList.commands = ['listusers']
 
 onNick.event = "NICK"
 onNick.rule = r'.*'

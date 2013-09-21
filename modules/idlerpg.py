@@ -85,6 +85,7 @@ def levelUser(player):
    currentItem = getItemOfUser(player, itemType.name)
    if currentItem is None:
       currentItem = Inventory.create(player_id=player.id, origin=itemOrigin.id, item_type=itemType.id, item_adj=itemDesc.id)
+
       eventText = "%s found a %s %s of %s" % (player.name, itemOrigin.name, itemType.name, itemDesc.name)
       Event.create(player_id=player.id, type="Item", text=eventText, date=datetime.datetime.now())
       print(eventText)
@@ -103,7 +104,7 @@ def levelUser(player):
       Event.create(player_id=player.id, type="Item", text=eventText, date=datetime.datetime.now())
       print(eventText)
 
-      currentItem.origin = ItemOrigin.id
+      currentItem.origin = itemOrigin.id
       currentItem.item_type = itemType.id
       currentItem.item_adj = itemDesc.id
       currentItem.save()

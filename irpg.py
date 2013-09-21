@@ -1,49 +1,49 @@
 #!/usr/local/bin/python3.3
-from flask import Flask
-from flask import g
+from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 from model import *
 import math
 from datetime import datetime, timedelta
-app = Flask(__name__)
-
+app = Flask(__name__, template_folder="template")
 
 
 @app.route('/')
 def home():
-   response = '''<head><title>IdleRPG2 Player Stats</title></head><body>
-                 IdleRPG2<hr />Level - Player<br />'''
-   for player in Player.select().order_by(Player.level.desc()):
-      response += "%s - <a href='/p/%s'>%s</a><br />" % (player.level, player.name, player.name)
+   players = Player.select().order_by(Player.level.desc())
 
-   response += '''<hr />Last 50 Battles (Most recent on top):<br /><br />'''
+   #for player in Player.select().order_by(Player.level.desc()):
+   #   players.append(dict(name=player.name, level=player.level))
+
+   battles = []
    for battle in Fight.select().order_by(Fight.fight_time.desc()).limit(50):
+      response = ""
       attackerWon = battle.attack >= battle.defense
       critText = ""
       if battle.critical:
-         critText = "%s's attack was a critical hit so %s was penalized for time!" % (battle.attacker.name, battle.defender.name)
-      response += '''[%s] %s [%s] attacked %s [%s] and %s. %s<br />''' % (getFormattedDate(battle.fight_time), battle.attacker.name, battle.attack, battle.defender.name, battle.defense, "won" if attackerWon else "lost", critText)
+         critText = "It was a critical hit!"
+      response += '''%s [%s] attacked %s [%s] and %s. %s''' % (battle.attacker.name, battle.attack, battle.defender.name, battle.defense, "won" if attackerWon else "lost", critText)
+      battles.append(dict(date=getFormattedDate(battle.fight_time), text=response, crit=battle.critical))
 
-   response += '''<hr />Last 50 Penalties (Most recent on top):<br /><br />'''
-   for penalty in Penalty.select().order_by(Penalty.date.desc()):
-      sway = "lost" if penalty.seconds < 0 else "gained"
+   penalties = []
+   for penalty in Penalty.select().order_by(Penalty.date.desc()).limit(50):
+      lostTime = penalty.seconds < 0
       penaltyTime = getFormattedTime(penalty.seconds)
 
       reason = ""
       if penalty.reason == "Leave":
-         reason = "leaving the channel."
+         reason = "Leaving"
       elif penalty.reason == "Nick":
-         reason = "changing their nick."
+         reason = "Nick change."
       elif penalty.reason == "Battle Won":
-         reason = "winning a battle."
+         reason = "Battle won."
       elif penalty.reason == "Battle Lost":
-         reason = "losing a battle."
+         reason = "Battle lost."
       elif penalty.reason == "Critical":
-         reason = "getting hit with a crit."
+         reason = "Critical hit."
 
-      response += '''[%s] %s %s %s for %s<br />''' % (getFormattedDate(penalty.date), penalty.player_id.name, sway, penaltyTime, reason)
+      penalties.append(dict(lostTime=lostTime, player=penalty.player_id.name, time=penaltyTime, reason=reason))
 
 
-   return response
+   return render_template('index.html', players=players, battles=battles, penalties=penalties)
 
 @app.route('/p/<name>')
 def player(name=None):
@@ -62,61 +62,56 @@ def player(name=None):
    else:
       timeToLevel = player.seconds_to_level
 
-   response += '''Name: %s<br />
-                  Level: %s<br />
-                  Time to level: %s<br />
-                  Logged in: %s<br />
-                  <hr />Inventory:<br />
-                  ''' % (player.name, player.level, getFormattedTime(timeToLevel), "Yes" if player.logged_in else "No")
    totalAttack = player.level
+   items = []
    for item in player.items.order_by(Inventory.item_type):
       itemStat = item.origin.stat + item.item_type.stat + item.item_adj.stat
       totalAttack += itemStat
-      response += '''%s %s of %s [%s]<br />''' % (item.origin.name, item.item_type.name, item.item_adj.name, itemStat)
+      name = '%s %s of %s' % (item.origin.name, item.item_type.name, item.item_adj.name)
+      items.append(dict(name=name, stat=itemStat))
 
-   response += '''<br />Total Attack/Defense: %s<br />
-                  (Sum of item stats + player level)''' % (totalAttack)
+   playerOut = dict(name=player.name, level=player.level, ttl=getFormattedTime(timeToLevel, False), logged="Yes" if player.logged_in else "No", attack=totalAttack)
 
-   response += '''<hr />Battles:<br >'''
+   battles = []
    for battle in Fight.select().where((Fight.attacker == player.id) | (Fight.defender == player.id)).order_by(Fight.fight_time.desc()):
+      response = ""
       attackerWon = battle.attack >= battle.defense
       critText = ""
       if battle.critical:
-         critText = "%s's attack was a critical hit so %s was penalized for time!" % (battle.attacker.name, battle.defender.name)
-      response += '''[%s] %s [%s] attacked %s [%s] and %s. %s<br />''' % (getFormattedDate(battle.fight_time), battle.attacker.name, battle.attack, battle.defender.name, battle.defense, "won" if attackerWon else "lost", critText)
+         critText = "It was a critical hit!"
+      response += '''%s [%s] attacked %s [%s] and %s. %s''' % (battle.attacker.name, battle.attack, battle.defender.name, battle.defense, "won" if attackerWon else "lost", critText)
+      battles.append(dict(date=getFormattedDate(battle.fight_time), text=response, crit=battle.critical))
 
-   response += '''<hr />Penalties:<br >'''
-   for penalty in player.penalties.order_by(Penalty.date.desc()).limit(50):
-
-      sway = "lost" if penalty.seconds < 0 else "gained"
-
+   penalties = []
+   for penalty in Penalty.select().where(Penalty.player_id == player.id).order_by(Penalty.date.desc()):
+      lostTime = penalty.seconds < 0
       penaltyTime = getFormattedTime(penalty.seconds)
 
       reason = ""
       if penalty.reason == "Leave":
-         reason = "leaving the channel."
+         reason = "Leaving"
       elif penalty.reason == "Nick":
-         reason = "changing their nick."
+         reason = "Nick change."
       elif penalty.reason == "Battle Won":
-         reason = "winning a battle."
+         reason = "Battle won."
       elif penalty.reason == "Battle Lost":
-         reason = "losing a battle."
+         reason = "Battle lost."
       elif penalty.reason == "Critical":
-         reason = "getting hit with a crit."
+         reason = "Critical hit."
 
-      response += '''[%s] %s %s %s for %s<br />''' % (getFormattedDate(penalty.date), penalty.player_id.name, sway, penaltyTime, reason)
-      #player <gained/lost> <time> for <reason>
+      penalties.append(dict(lostTime=lostTime, player=penalty.player_id.name, time=penaltyTime, reason=reason))
 
-
-
-   return response
+   return render_template('player.html', player=playerOut, items=items, battles=battles, penalties=penalties)
 
 def getFormattedDate(dtime):
-   return dtime.strftime("%m/%d/%y %I:%M:%S")
+   return dtime.strftime("%m/%d/%y %I:%M:%S %p")
 
-def getFormattedTime(seconds):
+def getFormattedTime(seconds, compact=True):
    d = datetime(1,1,1) + timedelta(seconds=math.fabs(seconds))
-   return "%d days %d hours %d minutes %d seconds" % (d.day-1, d.hour, d.minute, d.second)
+   if compact:
+      return "%s%02d:%02d:%02d:%02d" % ("-" if seconds < 0 else "", d.day-1, d.hour, d.minute, d.second)
+   else:
+      return "%dd %dh %dm %ds" % (d.day-1, d.hour, d.minute, d.second)
 
 @app.before_request
 def before_request():
@@ -129,4 +124,4 @@ def after_request(response):
     return response
 
 if __name__ == '__main__':
-   app.run(host='0.0.0.0', port=8080, debug=True)
+   app.run(host='0.0.0.0', port=8080, debug=False)

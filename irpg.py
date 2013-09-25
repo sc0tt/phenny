@@ -2,6 +2,7 @@
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 from model import *
 import math
+from operator import itemgetter
 from datetime import datetime, timedelta
 app = Flask(__name__, template_folder="template")
 
@@ -9,6 +10,26 @@ app = Flask(__name__, template_folder="template")
 @app.route('/')
 def home():
    players = Player.select().order_by(Player.level.desc())
+
+   playerList = []
+
+   for player in players:
+      if player.logged_in:
+         secondsToLevel = (player.countdown_start + timedelta(seconds=player.seconds_to_level)) - datetime.now()
+         secondsToLevel = secondsToLevel.seconds
+      else:
+         secondsToLevel = player.seconds_to_level
+      timeToLevel = getFormattedTime(secondsToLevel, False)
+
+      totalAttack = player.level
+      for item in player.items.order_by(Inventory.item_type):
+         totalAttack += item.origin.stat + item.item_type.stat + item.item_adj.stat
+
+      playerList.append(dict(name=player.name, ttl=timeToLevel, level=player.level, atk=totalAttack, logged="Yes" if player.logged_in else "No", stl=secondsToLevel))
+
+      playerList = sorted(playerList, key=lambda k: (-k['level'], k['stl']))
+
+
 
    #for player in Player.select().order_by(Player.level.desc()):
    #   players.append(dict(name=player.name, level=player.level))
@@ -43,7 +64,7 @@ def home():
       penalties.append(dict(lostTime=lostTime, player=penalty.player_id.name, time=penaltyTime, reason=reason))
 
 
-   return render_template('index.html', players=players, battles=battles, penalties=penalties)
+   return render_template('index.html', players=playerList, battles=battles, penalties=penalties)
 
 @app.route('/p/<name>')
 def player(name=None):

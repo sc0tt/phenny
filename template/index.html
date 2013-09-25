@@ -1,22 +1,28 @@
 {% extends "layout.html" %}
 {% block body %}
       <div class="row">
-        <div class="col-lg-4">
+        <div class="col-md-7">
           <h3>Player List</h3>
           <table class="table table-striped table-condensed table-bordered">
             <thead>
               <tr>
-                <th>Level</th>
                 <th>Player</th>
+                <th>Level</th>
+                <th>Time until Level</th>
+                <th>Atk/Def</th>
+                <th>Logged In</th>
               </tr>
             </thead>
             <tbody>
               {% for player in players %}
               <tr>
-                <td>{{ player.level }}</td>
                 <td>
                   <a href="{{ url_for('player', name=player.name) }}">{{ player.name|safe }}</a>
                 </td>
+                <td>{{ player.level }}</td>
+                <td>{{ player.ttl }}</td>
+                <td>{{ player.atk }}</td>
+                <td>{{ player.logged }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -24,7 +30,7 @@
         </div>
       </div>
       <div class="row">
-        <div class="col-lg-6">
+        <div class="col-md-7">
           <h3>Battles</h3>
           <table class="table table-striped table-condensed table-bordered">
             <thead>
@@ -47,7 +53,7 @@
             </tbody>
           </table>
         </div>
-        <div class="col-lg-6">
+        <div class="col-md-5">
           <h3>Penalties</h3>
           <table class="table table-striped table-condensed table-bordered">
             <thead>

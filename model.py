@@ -1,5 +1,6 @@
 #!/usr/local/bin/python3.3
 from peewee import *
+from datetime import datetime, timedelta
 
 db = SqliteDatabase('idlerpg.db', threadlocals=True)
 

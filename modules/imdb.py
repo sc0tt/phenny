@@ -30,3 +30,12 @@ def imdb(phenny, input):
    except:
         phenny.reply("No results found for '%s'." % query)
 imdb.commands = ['imdb']
+
+def actors(phenny, input):
+   query = input.group(2)
+   if not query: return phenny.reply('.actors wha..?')
+
+   m = imdb_search(query)
+   try: phenny.reply('{0} http://imdb.com/title/{1}'.format(m['Actors'],m['imdbID']))
+   except: phenny.reply("No results found for '%s'." % query)
+actors.commands = ['actors']

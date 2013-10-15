@@ -27,6 +27,9 @@ def onJoin(phenny, input):
       player.timer.start()
       currentPlayers[input.nick] = player
 
+      player.nextBattle = Timer(90 * 60, lambda: lambda: frequentBattle(player))
+      player.nextBattle.start()
+
 def onLeave(phenny, input):
    if input.nick == phenny.nick:
       pass
@@ -59,6 +62,16 @@ def updateUsers(phenny, input):
    source = input.args[1]
    if source.startswith("#"):
       onJoin(phenny, input)
+
+def frequentBattle(player):
+   if player.level < 25:
+      return
+
+   opponent = getRandomPlayer(ignore=player.name)
+   initFight(player, opponent)
+   player.nextBattle = Timer(90 * 60, lambda: lambda: frequentBattle(player))
+   player.nextBattle.start()
+
 
 def levelUser(player):
    player.level += 1

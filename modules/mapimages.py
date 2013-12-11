@@ -1,17 +1,36 @@
-images = {}
+from peeewee import *
+
+mapdb = SqliteDatabase('mappings.db')
+
+class MapModel(Model):
+    class Meta:
+        database = mapdb
+
+class Maps(MapModel):
+    key = peewee.TextField()
+    val = peewee.TextField()
+    
+Maps.create_table(True)
+
+
 def m(phenny, input):
-   word = input.group(2).split()
-   if len(word) > 0:
+   word = input.group(2)
+   if word:
+      word = word.split()
       key = word[0]
-      if key in images:
-         phenny.say(images[key])
+      try:
+         image = Maps.get(Maps.key==key)
+      except:
+         image = Maps()
+         
+      if len(word) == 1:
+            phenny.say(image.val)
+         except Exception:
+            phenny.say("Not Found")
       else:
-         if len(word) > 1:
-            word = " ".join(word[1:])
-            images[key] = word
-            phenny.say(key + " = " + word)
-         else:
-            phenny.say("No value for key " + key)   
+         word = " ".join(word[1:])
+         Maps.create(key=key, val=word)
+         phenny.say(key + " = " + word)
    else:
       phenny.say("-- .m <key> <value>")
 

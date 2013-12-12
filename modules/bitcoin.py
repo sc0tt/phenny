@@ -6,6 +6,7 @@ import requests
 import sqlite3
 
 lastPrice = 0
+lastLTCPrice = 0
 initial_cash = 50
 
 g_conn = sqlite3.connect("addresses.db", check_same_thread = False)
@@ -99,7 +100,6 @@ def calcusd2btc(num):
    data = json.loads(bytesData.text)
    return decimal.Decimal(num) * decimal.Decimal(data["usd_to_btc"])
 
-
 def bitcoin(phenny, input):
    global lastPrice
    uri = "https://coinbase.com/api/v1/prices/spot_rate"
@@ -142,6 +142,68 @@ def usd2btc(phenny, input):
 
 usd2btc.commands = ['usd2btc']
 usd2btc.priority = 'low'
+
+def calcltc2usd(num):
+   uri = "https://btc-e.com/api/2/ltc_usd/ticker"
+   bytesData = requests.get(uri)
+   data = bytesData.json()
+   return decimal.Decimal(num) * decimal.Decimal(data["ticker"]["last"])
+
+def calcusd2ltc(num):
+   uri = "https://btc-e.com/api/2/ltc_usd/ticker"
+   bytesData = requests.get(uri)
+   data = bytesData.json()
+   usdPerLtc = decimal.Decimal("1.0") / decimal.Decimal(data["ticker"]["last"])
+   return decimal.Decimal(num) * usdPerLtc
+
+def litecoin(phenny, input):
+   global lastLTCPrice
+   uri = "https://btc-e.com/api/2/ltc_usd/ticker"
+   bytesData = requests.get(uri)
+   data = bytesData.json()
+   diff = decimal.Decimal(data["ticker"]["last"]) - lastLTCPrice
+   diffStr = ""
+   if diff != decimal.Decimal(0):
+      sign = "+" if diff > 0 else ''
+      diffStr = " (%s%0.5f)" % (sign, diff)
+   output = 'Current Price of Ł1: $%0.5f%s' % (data["ticker"]["last"], diffStr)
+   lastLTCPrice = decimal.Decimal(data["ticker"]["last"])
+   phenny.say(output)
+
+litecoin.commands = ['ltc']
+litecoin.priority = 'low'
+
+def ltc2usd(phenny, input):
+   arg = input.group(2)
+   #If an argument is provided, convert the exchange rate
+   if arg:
+      rate = calcltc2usd(arg)
+      usd = decimal.Decimal(arg)
+      output = 'Ł%s will get you $%.05f' % (usd, rate)
+      phenny.say(output)
+
+
+ltc2usd.commands = ['ltc2usd']
+ltc2usd.priority = 'low'
+
+def usd2ltc(phenny, input):
+   arg = input.group(2)
+   #If an argument is provided, convert the exchange rate
+   if arg:
+      rate = calcusd2ltc(arg)
+      usd = decimal.Decimal(arg)
+      output = '$%s will get you Ł%.05f' % (usd, rate)
+      phenny.say(output)
+
+
+usd2ltc.commands = ['usd2ltc']
+usd2ltc.priority = 'low'
+
+def ticker(phenny, input):
+   bitcoin(phenny, input)
+   litecoin(phenny, input)
+
+ticker.commands = ['tick']
 
 def addr_set(phenny, input):
    wallet = input.group(2)

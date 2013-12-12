@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 from random import choice
+import datetime
 import requests
 
 alotImages = ["http://i.imgur.com/7GJ5XoB.png",
@@ -28,6 +29,11 @@ def heh(phenny, input):
 heh.commands = ['heh']
 heh.priority = 'low'
 
+def hue(phenny, input):
+   phenny.say("http://i.imgur.com/0IYzpNm.jpg")
+
+hue.commands = ['hue']
+
 def dance(phenny, input):
    phenny.do("dances")
 
@@ -39,6 +45,12 @@ def ohyou(phenny, input):
 
 ohyou.commands = ['ohyou']
 ohyou.priority = 'low'
+
+def ohme(phenny, input):
+   phenny.say("http://i.imgur.com/H5GdFcD.jpg")
+
+ohme.commands = ['ohme']
+ohme.priority = 'low'
 
 def lod(phenny, input):
    phenny.say("ಠ_ಠ")
@@ -91,3 +103,47 @@ def zen(phenny, input):
 
 zen.commands = ['zen']
 zen.priority = 'low'
+
+def pax(phenny, input):
+   paxDate = datetime.datetime(2014, 4, 11)
+   now = datetime.datetime.now()
+   daysToPax = (paxDate - now).days
+   phenny.say("%s days until PAX East!" % (daysToPax,))
+
+pax.commands = ['pax']
+pax.priority = 'low'
+
+def troll(phenny, input):
+   phenny.say("http://i.imgur.com/hKCXuZz.jpg")
+
+troll.commands = ['trolled']
+
+def hey(phenny, input):
+   phenny.say("http://heeeeeeeey.com/")
+hey.commands = ['hey']
+
+def ho(phenny, input):
+   phenny.say("http://hooooooooo.com/")
+ho.commands = ['ho']
+
+def nfact(phenny, input):
+   phenny.say(requests.get("http://numbersapi.com/random").text)
+
+nfact.commands = ['nfact']
+
+def fourtytwo(phenny, input):
+   phenny.say(requests.get("http://numbersapi.com/42").text)
+fourtytwo.commands = ['42']
+
+def today(phenny, input):
+   month = datetime.datetime.now().month
+   day = datetime.datetime.now().day
+   phenny.say(requests.get("http://numbersapi.com/%s/%s/date" % (month, day)).text)
+today.commands = ['tfact']
+
+#def reddit(phenny, input):
+#   reddit = input.group(1)
+#   phenny.say("http://reddit.com/r/%s" % reddit)
+
+#reddit.rule = '.*r/([A-z0-9_-]+)'
+

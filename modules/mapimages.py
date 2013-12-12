@@ -22,7 +22,7 @@ def m(phenny, input):
          image = Maps.get(Maps.key==key)
       except:
          image = Maps()
-         
+
       if len(word) == 1:
          try:
             phenny.say(image.val)
@@ -33,6 +33,7 @@ def m(phenny, input):
          image.key = key
          image.val = word
          image.save()
+         Maps.create(key=key, val=word)
          phenny.say(key + " = " + word)
    else:
       phenny.say("-- .m <key> <value>")

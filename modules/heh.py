@@ -141,6 +141,29 @@ def today(phenny, input):
    phenny.say(requests.get("http://numbersapi.com/%s/%s/date" % (month, day)).text)
 today.commands = ['tfact']
 
+def fuckyou(phenny, input):
+   replies = ["Sorry :(", 
+              "I didn't mean to do anything wrong D:",
+              ":/ okay."]
+   phenny.say(choice(replies))
+fuckyou.rule = 'fuck you, boredbot'
+
+def ask(phenny, input):
+  phenny.say(choice(requests.get("http://www.reddit.com/r/askreddit.json?limit=100").json()["data"]["children"])["data"]["title"])
+
+ask.commands = ['ask']
+
+def shower(phenny, input):
+  phenny.say(choice(requests.get("http://www.reddit.com/r/showerthoughts.json?limit=100").json()["data"]["children"])["data"]["title"])
+
+shower.commands = ['shower']
+
+def rando(phenny, input):
+  r = requests.get("http://reddit.com/r/random")
+  a = choice(requests.get("http://reddit.com%s.json?limit=100" % (r.url[r.url.index("/r/"):])).json()["data"]["children"])
+  phenny.say("%s - %s" % (a["data"]["title"], a["data"]["url"]))
+rando.commands = ['rando']
+
 #def reddit(phenny, input):
 #   reddit = input.group(1)
 #   phenny.say("http://reddit.com/r/%s" % reddit)

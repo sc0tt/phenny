@@ -4,7 +4,37 @@ import requests
 
 lastPrice = 0
 lastLTCPrice = 0
-initial_cash = 50
+lastDogePrice = 0
+
+def calcdoge2usd(num):
+   uri = "http://www.cryptocoincharts.info/v2/api/tradingPair/doge_btc"
+   data = requests.get(uri).json()
+   return calcbtc2usd(decimal.Decimal(num) * decimal.Decimal(data["price"]))
+
+def doge2usd(phenny, input):
+   arg = input.group(2)
+   #If an argument is provided, convert the exchange rate
+   if arg:
+      rate = calcdoge2usd(arg)
+      usd = decimal.Decimal(arg)
+      output = '%s DOGE will get you $%s' % (usd, rate)
+      phenny.say(output)
+
+doge2usd.commands = ['doge2usd']
+
+def dogecoin(phenny, input):
+   global lastDogePrice
+   uri = "http://www.cryptocoincharts.info/v2/api/tradingPair/doge_btc"   
+   data = requests.get(uri).json()
+   diff = decimal.Decimal(data["price"]) - lastDogePrice
+   diffStr = ""
+   if diff != decimal.Decimal(0):
+      sign = "+" if diff > 0 else ''
+      diffStr = " (%s%s)" % (sign, diff)
+   output = 'Current Price of 1 DOGE: ฿%s%s' % (data["price"], diffStr)
+   lastDogePrice = decimal.Decimal(data["price"])
+   phenny.say(output)
+dogecoin.commands = ['doge']
 
 def calcbtc2usd(num):
    uri = "https://coinbase.com/api/v1/currencies/exchange_rates"
@@ -114,5 +144,6 @@ usd2ltc.priority = 'low'
 def ticker(phenny, input):
    bitcoin(phenny, input)
    litecoin(phenny, input)
+   dogecoin(phenny, input)
 
 ticker.commands = ['tick']

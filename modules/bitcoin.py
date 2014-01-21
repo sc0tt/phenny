@@ -26,12 +26,13 @@ def dogecoin(phenny, input):
    global lastDogePrice
    uri = "http://www.cryptocoincharts.info/v2/api/tradingPair/doge_btc"   
    data = requests.get(uri).json()
+   data["price"] = calcbtc2usd(data["price"])
    diff = decimal.Decimal(data["price"]) - lastDogePrice
    diffStr = ""
    if diff != decimal.Decimal(0):
       sign = "+" if diff > 0 else ''
       diffStr = " (%s%s)" % (sign, diff)
-   output = 'Current Price of 1 DOGE: ฿%s%s' % (data["price"], diffStr)
+   output = 'Current Price of 1 DOGE: $%s%s' % (data["price"], diffStr)
    lastDogePrice = decimal.Decimal(data["price"])
    phenny.say(output)
 dogecoin.commands = ['doge']

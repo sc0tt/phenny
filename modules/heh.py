@@ -105,7 +105,7 @@ zen.commands = ['zen']
 zen.priority = 'low'
 
 def pax(phenny, input):
-   paxDate = datetime.datetime(2014, 4, 11)
+   paxDate = datetime.datetime(2014, 4, 12)
    now = datetime.datetime.now()
    daysToPax = (paxDate - now).days
    phenny.say("%s days until PAX East!" % (daysToPax,))
@@ -113,6 +113,13 @@ def pax(phenny, input):
 pax.commands = ['pax']
 pax.priority = 'low'
 
+def banished(phenny, input):
+   d = datetime.datetime(2014, 2, 18, 15, 0, 0, 0)
+   now = datetime.datetime.now()
+   togo = (d - now).days
+   phenny.say("%s days until Banished is released!" % (togo,))
+
+banished.commands = ['banished']
 def troll(phenny, input):
    phenny.say("http://i.imgur.com/hKCXuZz.jpg")
 
@@ -149,7 +156,8 @@ def fuckyou(phenny, input):
 fuckyou.rule = 'fuck you, boredbot'
 
 def ask(phenny, input):
-  phenny.say(choice(requests.get("http://www.reddit.com/r/askreddit.json?limit=100").json()["data"]["children"])["data"]["title"])
+  header =  {"User-Agent": "Boredbot/1.0 by sc00ty"}
+  phenny.say(choice(requests.get("http://www.reddit.com/r/askreddit.json?limit=100", headers=header).json()["data"]["children"])["data"]["title"])
 
 ask.commands = ['ask']
 
@@ -157,6 +165,10 @@ def shower(phenny, input):
   phenny.say(choice(requests.get("http://www.reddit.com/r/showerthoughts.json?limit=100").json()["data"]["children"])["data"]["title"])
 
 shower.commands = ['shower']
+
+def crazy(phenny, input):
+  phenny.say(choice(requests.get("http://www.reddit.com/r/crazyideas.json?limit=100").json()["data"]["children"])["data"]["title"])
+crazy.commands = ['crazy']
 
 def rando(phenny, input):
   r = requests.get("http://reddit.com/r/random")
@@ -170,3 +182,8 @@ rando.commands = ['rando']
 
 #reddit.rule = '.*r/([A-z0-9_-]+)'
 
+def mirror(phenny, input):
+  if input.group(2):
+    phenny.say("http://mirror.h1x0.net/%s" % input.group(2))
+
+mirror.commands = ['mirror']
